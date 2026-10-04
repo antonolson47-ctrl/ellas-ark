@@ -1,0 +1,16 @@
+{
+  "name": "Ella's Ark",
+  "short_name": "Ella's Ark",
+  "description": "Run a Noah's Ark animal shelter in the El Paso desert with Ella and Sarge: dogs, cats, flood exotics, Puddle mashups and celebrity adopters. Adults 18+ (Raunchy humor by default, Cleaner toggle in Settings).",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#231b55",
+  "theme_color": "#231b55",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

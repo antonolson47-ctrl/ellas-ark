@@ -1,0 +1,14 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ella's Ark - concept mockups</title>
+<style>html,body{margin:0;background:#1a1020;overflow:hidden}canvas{display:block}</style></head><body><canvas id="cv"></canvas>
+<script src="lib_core.js"></script><script src="lib_world.js"></script><script src="lib_chars.js"></script>
+<script src="scene_keyart.js"></script><script src="scene_gameplay.js"></script><script src="scene_cards.js"></script>
+<script>
+// Concept mockup only (not game code). Everything drawn procedurally in canvas.
+const MODE = new URLSearchParams(location.search).get('mode') || 'keyart';
+const SIZES = { keyart: [390, 844, 3], gameplay: [844, 390, 3], cards: [1200, 760, 2] };
+document.fonts.load('20px "Luckiest Guy"').then(() => document.fonts.load('20px "Lilita One"')).then(() => document.fonts.load('20px "Fredoka"')).finally(() => {
+  const [W, H, D] = SIZES[MODE]; setup(W, H, D);
+  try { ({ keyart: sceneKeyart, gameplay: typeof sceneGameplay !== 'undefined' ? sceneGameplay : null, cards: typeof sceneCards !== 'undefined' ? sceneCards : null })[MODE](W, H); document.title = 'DONE'; }
+  catch (e) { document.title = 'ERR ' + e.message; console.error(e); }
+});
+</script></body></html>
