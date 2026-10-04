@@ -8,6 +8,9 @@
 - [x] build.sh → EllasArk.html; make_pages.sh → ../ellas-ark-pages
 - [x] Playwright suite test/mobile.js: WebKit + Chromium, iPhone 13 portrait/landscape/rotation — all passing
 - [x] Screenshots in screenshots/
-- [ ] Publish: repo antonolson47-ctrl/ellas-ark + GitHub Pages, live URL verified
+- [x] Published: https://github.com/antonolson47-ctrl/ellas-ark → https://antonolson47-ctrl.github.io/ellas-ark/ (live URL passes test/mobile.js in WebKit + Chromium, 31/31)
 
 Debug: in the console, `__EA.jump(n)` fast-forwards to chapter n (1-20) with act-appropriate money, upgrades and residents. `__EA.endShift()` ends the care shift.
+
+## Republish
+`./make_pages.sh && cd ../ellas-ark-pages && git add -A && git commit -m update && git push`
