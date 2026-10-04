@@ -3,7 +3,7 @@ let DT = 0, LAST = performance.now(), FRAMES = 0, ERRS = [];
 function drawDay() {
   const tab = RT.tab, ph = RT.phase;
   if (ph === 'report' && (tab === 'ark' || tab === 'adopt' || tab === 'ads')) drawReport();
-  else if (tab === 'ark' && ph !== 'open') { drawView(); drawCarePanel(); }
+  else if (tab === 'ark' && ph !== 'open') { drawView(); drawTags(); drawCarePanel(); }
   else if (tab === 'adopt' || tab === 'ark') { if (ph === 'open') drawOpenHouse(); else drawAdoptPre(); }
   else if (tab === 'ads') drawAds(); else if (tab === 'build') drawBuild(); else if (tab === 'dex') drawDex();
   drawHUD(); drawTabs();

@@ -215,6 +215,20 @@ function drawCreature(kit, blink) {
 /* ---------- sprite cache ---------- */
 const SPR = new Map();
 const tmpCv = document.createElement('canvas'); tmpCv.width = 1000; tmpCv.height = 820; const tmpG = tmpCv.getContext('2d', { willReadFrequently: true });
+// Volume lighting for any finished art canvas: soft top-left rim light, bottom-right core shadow, warm-top/cool-bottom grade.
+const LPA = document.createElement('canvas');
+function lightPass(c, k = 1) {
+  const w = c.width, h = c.height; if (w < 12 || h < 12) return; const x = c.getContext('2d', { willReadFrequently: true }), a = LPA.getContext('2d', { willReadFrequently: true });
+  LPA.width = w; LPA.height = h; const d = clamp(Math.min(w, h) * .05, 3, 16);
+  const band = (dx, dy) => { a.globalCompositeOperation = 'source-over'; a.clearRect(0, 0, w, h); a.drawImage(c, 0, 0); a.globalCompositeOperation = 'destination-out'; a.drawImage(c, dx, dy); a.globalCompositeOperation = 'source-over'; return a.getImageData(0, 0, w, h).data; };
+  const H1 = band(d * 1.1, d * 1.3), H2 = band(d * .45, d * .55), S1 = band(-d * 1.3, -d * 1.6);
+  const img = x.getImageData(0, 0, w, h), D = img.data;
+  for (let yy = 0; yy < h; yy++) { const fy = yy / h, warm = fy < .5 ? (.5 - fy) * .16 : 0, cool = fy > .62 ? (fy - .62) * .42 : 0;
+    for (let xx = 0, i = yy * w * 4; xx < w; xx++, i += 4) { if (D[i + 3] < 12) continue; const r = D[i], gg = D[i + 1], bb = D[i + 2], lum = (.3 * r + .59 * gg + .11 * bb) / 255; if (lum < .2) continue;
+      const f = clamp((lum - .2) / .14, 0, 1) * k, hl = Math.min(.5, (H1[i + 3] * .55 + H2[i + 3] * .25) / 255 * .5 + warm) * f, sh = Math.min(.42, S1[i + 3] / 255 * .3 + cool) * f;
+      D[i] = (r + (255 - r) * hl) * (1 - sh); D[i + 1] = (gg + (250 - gg) * hl) * (1 - sh * 1.12); D[i + 2] = (bb + (232 - bb) * hl) * (1 - sh * .78); } }
+  x.putImageData(img, 0, 0);
+}
 function renderSprite(kit, blink) {
   const rs = kit.rs || 1.7, OX = 500, OY = 760;
   const old = g; g = tmpG; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 1000, 820);
@@ -225,7 +239,7 @@ function renderSprite(kit, blink) {
   for (let y = 0; y < 820; y += 2) { const row = y * 4000; for (let x = 0; x < 1000; x += 2) if (id[row + x * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
   if (x1 < x0) { x0 = 0; y0 = 0; x1 = 10; y1 = 10; }
   x0 = Math.max(0, x0 - 4); y0 = Math.max(0, y0 - 4); x1 = Math.min(999, x1 + 4); y1 = Math.min(819, y1 + 4);
-  const w = x1 - x0, h = y1 - y0, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(tmpCv, x0, y0, w, h, 0, 0, w, h);
+  const w = x1 - x0, h = y1 - y0, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(tmpCv, x0, y0, w, h, 0, 0, w, h); lightPass(c);
   return { c, w, h, ax: OX - x0, ay: OY - y0, rs };
 }
 function getSprite(kit) {

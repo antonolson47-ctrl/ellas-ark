@@ -119,10 +119,11 @@ function drawFinale() {
   const gr = g.createLinearGradient(0, wl, 0, H); gr.addColorStop(0, 'rgba(43,227,200,.75)'); gr.addColorStop(1, 'rgba(20,90,110,.95)'); g.fillStyle = gr; g.beginPath(); g.moveTo(0, wl + 20); for (let x = 0; x <= W; x += 20) g.lineTo(x, wl + 20 + Math.sin(x * .05 + RT.t * 3) * 6); g.lineTo(W, H); g.lineTo(0, H); g.closePath(); g.fill();
   { // gala guests still bobbing in the flood + Ella and Sarge on a rescue raft
     const rowsB = Math.ceil(POWERS.length / (P ? 3 : 6)), byB = H - rowsB * ((P ? 58 : 50) + 8) - 10, left = F.done ? 0 : 6 - Math.min(F.step, 6), skins = ['#f2c8a0', '#c88a5a', '#8a5a3a', '#f8d8c0', '#a86a48'];
-    for (let i = 0; i < left * 2; i++) { const gx = 30 + ((i * 113 + Math.sin(RT.t * .6 + i) * 18) % (W - 60)), gy = wl + 50 + (i % 3) * ((byB - wl - 90) / 3) + Math.sin(RT.t * 2.2 + i) * 3, sk = skins[i % 5];
+    const rx0 = W * (P ? .04 : .03), eh0 = P ? 150 : 112, raftR = rx0 + eh0 * .95 + 16, raftT = byB - 16 - eh0 - 24;
+    for (let i = 0; i < left * 2; i++) { const gy = wl + 50 + (i % 3) * ((byB - wl - 90) / 3) + Math.sin(RT.t * 2.2 + i) * 3, x0 = gy > raftT ? raftR : 30, gx = x0 + ((i * 113 + Math.sin(RT.t * .6 + i) * 18) % Math.max(40, W - x0 - 30)), sk = skins[i % 5];
       if (gy > byB - 30) continue; line([[gx + 8, gy], [gx + 14 + Math.sin(RT.t * 8 + i) * 3, gy - 18]], sk, 3); paint(() => C(gx, gy - 4, 8), sk, darken(sk, .15), { lw: 1.4 });
       if (i % 2) paint(() => RR(gx - 6, gy - 22, 12, 10, 1), '#222', null, { lw: 1 }); else paint(() => star5(gx, gy - 13, 5, 2.2), '#ffd24a', null, { lw: 1 });
-      g.fillStyle = INK; g.fillRect(gx - 3, gy - 6, 1.6, 1.6); g.fillRect(gx + 2, gy - 6, 1.6, 1.6); if (i < 4 && (RT.t + i) % 3 < 1.4) ftxt(['HELP!', 'MY SHOES!', 'NOT THE SILK!', 'I CAN\'T SWIM, I\'M RICH!'][i], gx, gy - 30, 120, 10, FONT.lil, '#fff4e0', INK, 3); }
+      g.fillStyle = INK; g.fillRect(gx - 3, gy - 6, 1.6, 1.6); g.fillRect(gx + 2, gy - 6, 1.6, 1.6); if (i < 4 && (RT.t + i) % 3 < 1.4) ftxt(['HELP!', 'MY SHOES!', 'NOT THE SILK!', 'I CAN\'T SWIM, I\'M RICH!'][i], clamp(gx, 66, W - 66), gy - 30, 120, 10, FONT.lil, '#fff4e0', INK, 3); }
     const rx = W * (P ? .04 : .03), ry = byB - 16 + Math.sin(RT.t * 2) * 3, eh = P ? 150 : 112; seed = 5; plank(rx, ry - 6, eh * .9, 14, 4, '#a86d3a', { rows: 1 });
     drawElla(rx + eh * .28, ry - 4, eh, { pose: 'hose' }); drawSpr(sargeSpr(), rx + eh * .66, ry - 4, eh * .42, eh * .32, { blink: (RT.t % 4) < .15 });
   }

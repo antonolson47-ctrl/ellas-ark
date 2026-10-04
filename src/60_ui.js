@@ -96,7 +96,7 @@ function cached(key, x, y, w, h, fn) {
   const k = L.sc * L.dpr, full = key + '|' + [x, y, w, h, k.toFixed(3)].join(',');
   let c = CACHE.get(full);
   if (!c) {
-    if (CACHE.size > 40) CACHE.clear();
+    if (CACHE.size > 90) CACHE.clear();
     c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w * k)); c.height = Math.max(1, Math.ceil(h * k));
     const cx = c.getContext('2d'), old = g; g = cx; g.setTransform(k, 0, 0, k, -x * k, -y * k); g.lineJoin = 'round'; g.lineCap = 'round';
     try { fn(); } catch (e) { console.warn('cache draw', key, e); } finally { g = old; }
@@ -108,7 +108,7 @@ function cached(key, x, y, w, h, fn) {
 const ART = new Map();
 function artSprite(key, bw, bh, ox, oy, res, fn) {
   let a = ART.get(key);
-  if (!a) { const c = document.createElement('canvas'); c.width = Math.ceil(bw * res); c.height = Math.ceil(bh * res); const old = g; g = c.getContext('2d'); g.setTransform(res, 0, 0, res, ox * res, oy * res); g.lineJoin = 'round'; g.lineCap = 'round'; try { fn(); } catch (e) { console.warn('art', key, e); } finally { g = old; } a = { c, bw, bh, ox, oy }; ART.set(key, a); }
+  if (!a) { const c = document.createElement('canvas'); c.width = Math.ceil(bw * res); c.height = Math.ceil(bh * res); const old = g; g = c.getContext('2d'); g.setTransform(res, 0, 0, res, ox * res, oy * res); g.lineJoin = 'round'; g.lineCap = 'round'; try { fn(); } catch (e) { console.warn('art', key, e); } finally { g = old; } if (/^(ella|bust)/.test(key)) lightPass(c, .8); a = { c, bw, bh, ox, oy }; ART.set(key, a); }
   return a;
 }
 // Ella full body: reference feet at (0,0), ~300 tall
@@ -123,7 +123,14 @@ function bustArt(id, p) { return artSprite('bust:' + id, 170, 160, 85, 152, 2.2,
 function drawBust(id, p, x, y, h, flip) { const a = bustArt(id, p), s = h / 140; g.save(); g.translate(x, y); if (flip) g.scale(-1, 1); g.drawImage(a.c, -a.ox * s, -a.oy * s, a.bw * s, a.bh * s); g.restore(); }
 
 /* ---------- toasts, Ella speech, particles, shake ---------- */
-function toast(msg, col = '#ffe9a8', dur = 2) { RT.toasts.push({ msg: String(msg), col, t: 0, dur }); if (RT.toasts.length > 4) RT.toasts.shift(); }
+// Message bar: ONE message at a time in a dedicated slot (the HUD's centre on day screens), queued, de-duplicated, auto-fading.
+function toast(msg, col = '#ffe9a8', dur = 2) {
+  msg = String(msg); const q = RT.toasts, ex = q.find(t => t.msg === msg);
+  if (ex) { ex.dur = Math.max(ex.dur, ex.t + 1.2); return; }
+  q.push({ msg, col, t: 0, dur: clamp(dur, 1.3, 3.2) }); while (q.length > 3) q.splice(1, 1);
+}
+// small floating label tied to one resident's stall (care feedback); one per stall, replaces the previous one
+function tagRes(r, msg, col = '#fff4e0') { if (!r) return; RT.tags = RT.tags || {}; RT.tags[r.id] = { msg: String(msg), col, t: 0 }; }
 function ellaSay(s) { RT.say = { s, t: 0 }; }
 function shake(n) { if (SETTINGS.shake) RT.shake = Math.max(RT.shake, n); }
 const PCOL = { confetti: ['#ff5a7a', '#ffd24a', '#6be3c8', '#7ad0ff', '#c070ff', '#ff9a3a'] };
@@ -154,7 +161,9 @@ function updateParts(dt) {
     p.x += p.vx * dt; p.y += p.vy * dt; if (p.k === 'money') p.x += Math.sin(p.life * 3 + p.rot) * 30 * dt;
   }
   RT.parts = RT.parts.filter(p => p.life <= p.max);
-  for (const t of RT.toasts) t.t += dt; RT.toasts = RT.toasts.filter(t => t.t < t.dur);
+  if (RT.toasts.length && !RT.story) { const t = RT.toasts[0]; t.t += dt * (RT.toasts.length > 1 && t.t > 1 ? 1.8 : 1); if (t.t >= t.dur) RT.toasts.shift(); }
+  if (RT.tags) for (const k in RT.tags) { RT.tags[k].t += dt; if (RT.tags[k].t > 1.5) delete RT.tags[k]; }
+  RT.hudPulse = Math.max(0, (RT.hudPulse || 0) - dt * 2.5);
   if (RT.say) { RT.say.t += dt; if (RT.say.t > 3.2) RT.say = null; }
   RT.shake = Math.max(0, RT.shake - dt * 30); RT.cashPop = Math.max(0, (RT.cashPop || 0) - dt * 4);
 }
@@ -176,13 +185,22 @@ function drawParts() {
     g.restore();
   }
 }
+function toastSlot() {
+  if (RT.scene === 'day' && !RT.story && LY.hud) { const [x, y, w, h] = LY.hud, mw = L.portrait ? 112 : 136, x0 = x + 16 + mw, x1 = x + w - (L.portrait ? 52 : 100) - 6; return [x0, y + 6, x1 - x0, h - 12]; }
+  const w = Math.min(L.W - 40, 380); return [(L.W - w) / 2, RT.scene === 'finale' ? 72 : 8, w, 34];
+}
 function drawToasts() {
-  const m = LY.main || [0, 0, L.W, L.H]; let y = m[1] + 34;
-  for (const t of RT.toasts) {
-    const a = clamp(Math.min(t.t * 6, (t.dur - t.t) * 4), 0, 1), w = Math.min(L.W - 30, 360); const ls = lines(t.msg, w - 24, `15px ${FONT.lil}`); const h = ls.length * 18 + 12;
-    g.save(); g.globalAlpha = a; const x = m[0] + m[2] / 2 - w / 2, yy = y - (1 - a) * 12;
-    g.fillStyle = 'rgba(30,14,8,.86)'; g.beginPath(); RR(x, yy, w, h, 10); g.fill(); g.strokeStyle = t.col; g.lineWidth = 2; g.stroke();
-    ls.forEach((l, i) => txt(l, x + w / 2, yy + 15 + i * 18, `15px ${FONT.lil}`, t.col, null));
-    g.restore(); y += h + 6;
-  }
+  const t = RT.toasts[0]; if (!t || RT.story) return; const [x, y, w, h] = toastSlot();
+  const a = clamp(Math.min(t.t * 7, (t.dur - t.t) * 5), 0, 1); g.save(); g.globalAlpha = a; const yy = y - (1 - a) * 6;
+  paint(() => RR(x, yy, w, h, h / 2), '#22120a', null, { lw: 1.6 }); g.strokeStyle = t.col; g.lineWidth = 1.6; g.beginPath(); RR(x + 2.5, yy + 2.5, w - 5, h - 5, h / 2 - 2.5); g.stroke();
+  let fs = 13, ls = lines(t.msg, w - 22, `${fs}px ${FONT.lil}`); while (ls.length > 2 && fs > 9) { fs -= .5; ls = lines(t.msg, w - 22, `${fs}px ${FONT.lil}`); } if (ls.length > 2) { ls = ls.slice(0, 2); ls[1] = ls[1].replace(/.{0,2}$/, '…'); }
+  const lh = fs + 1.5, ty = yy + h / 2 - (ls.length - 1) * lh / 2 + .5; ls.forEach((l, i) => ftxt(l, x + w / 2, ty + i * lh, w - 20, fs, FONT.lil, t.col, null));
+  if (RT.toasts.length > 1) { for (let i = 1; i < RT.toasts.length; i++) paint(() => C(x + w - 8 - (i - 1) * 7, yy + h - 5, 2.2), RT.toasts[i].col, null, { lw: 0 }); }
+  g.restore();
+}
+function drawTags() { // care labels float up from the top of a stall, never over the animal's face
+  if (!RT.tags || !LY.view || RT.scene !== 'day') return; const G = gridGeom();
+  for (const id in RT.tags) { const r = GS.residents.find(q => q.id == id); if (!r || r.st < 0) continue; const rc = stallRect(r.st, G); if (!rc) continue; const T0 = RT.tags[id], k = T0.t / 1.5;
+    g.save(); g.globalAlpha = clamp(Math.min(T0.t * 8, (1.5 - T0.t) * 3), 0, 1); g.font = `11px ${FONT.lucky}`; const tw = Math.min(rc[2] - 10, g.measureText(T0.msg).width + 16), cx = rc[0] + rc[2] / 2, cy = rc[1] + 34 - k * 14;
+    paint(() => RR(cx - tw / 2, cy - 9, tw, 18, 9), 'rgba(34,18,10,.88)', null, { lw: 1.2 }); ftxt(T0.msg, cx, cy + .5, tw - 10, 11, FONT.lucky, T0.col, null); g.restore(); }
 }

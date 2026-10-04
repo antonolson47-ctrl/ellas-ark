@@ -32,3 +32,6 @@ Touch or mouse: tap buttons and swipe. Keyboard: arrows select animals, 1-6 use 
 - Tests: `cd test && npm install && node mobile.js webkit` (iPhone 13 profile in WebKit) or `node mobile.js chromium`. Pass a URL as a third argument to test the live site.
 
 Fonts: Luckiest Guy, Lilita One and Fredoka (SIL Open Font License), embedded.
+
+## Art polish pass
+Before/after captures live in `screenshots/polish/` (`compare_*.png` puts before and after side by side; `after_x_*` are extra captures of the Mashdex cards, stall tags, HUD message bar and desert scenes).

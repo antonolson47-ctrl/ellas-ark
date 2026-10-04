@@ -41,7 +41,7 @@ function rehome() { // after buying a habitat: move wrong-habitat residents into
   placeQueue(); return moved;
 }
 function dexKey(r) { return r.sp === 'mash' ? 'm:' + r.mash.parents.join('+') : r.stray ? null : r.sp; }
-function dexAdd(r) { const k = dexKey(r); if (!k || GS.dex[k]) return; GS.dex[k] = r.sp === 'mash' ? { n: r.name, p: r.mash.parents, l: r.mash.legend, d: GS.day } : { n: r.name, d: GS.day }; RT.newDex = (RT.newDex || 0) + 1; }
+function dexAdd(r) { const k = dexKey(r); if (!k || GS.dex[k]) return; GS.dex[k] = r.sp === 'mash' ? { n: r.name, p: r.mash.parents, l: r.mash.legend, d: GS.day, g: r.mash.gag, rr: r.mash.rarity } : { n: r.name, d: GS.day }; RT.newDex = (RT.newDex || 0) + 1; }
 function mashResident(a, b) {
   const m = makeMash(a, b); const mash = Object.assign({}, m); delete mash.kit;
   if (has('p_filter')) { mash.fee = Math.round(mash.fee * 1.2); }
@@ -164,7 +164,7 @@ function answerCall(side) {
 }
 function bumpStreak() {
   RT.streak++; RT.streakT = 0; const old = RT.mult; RT.mult = RT.streak >= 10 ? 2 : RT.streak >= 5 ? 1.5 : 1;
-  if (RT.mult > old) { sfx('riser'); toast(RT.mult >= 2 ? 'HOOAH STREAK x2!' : 'HOOAH STREAK x1.5!', '#ffd24a', 2); MUS.lvl = RT.mult >= 2 ? 3 : 2; }
+  if (RT.mult > old) { sfx('riser'); (RT.hudPulse = 1); MUS.lvl = RT.mult >= 2 ? 3 : 2; }
   else sfx('streak', Math.min(RT.streak, 12));
 }
 // care actions: return true if something useful happened
@@ -175,7 +175,7 @@ function careAction(r, kind, amt = 1) {
   if (kind === 'vet') { if (r.boo.length) { r.boo.pop(); r.health = clamp(r.health + (has('c_vet') ? .6 : .4), 0, 1); if (!r.boo.length) { r.health = has('c_vet') ? 1 : Math.max(r.health, .9); GS.stats.vets++; ok = true; sfx('ding'); spawn('heart', c, 6); } else sfx('pop'); } else if (r.health < .95) { r.health = clamp(r.health + .4, 0, 1); GS.stats.vets++; ok = true; sfx('ding'); spawn('heart', c, 5); } }
   if (kind === 'play') { r.happy = clamp(r.happy + amt, 0, 1); ok = amt >= .3 || r.happy >= .999; if (ok) { sfx('pop'); spawn('star', c, 6); } }
   if (kind === 'sig') { if (r.sigDay !== GS.day) { r.sigDay = GS.day; for (const nd of ['hunger', 'clean', 'health']) r[nd] = clamp(r[nd] + .3, 0, 1); r.happy = 1; GS.stats.sig++; ok = true; sfx('fwoomp'); spawn('heart', c, 14); spawn('sparkle', c, 14); } }
-  if (ok) { GS.stats.care++; bumpStreak(); voice(voiceOf(r), sizeOf(r)); r.bounce = 1; if (grnd() < .45) ellaSay(tx(pick(ELLA_CARE[kind === 'sig' ? 'special' : kind] || ELLA_CARE.feed))); }
+  if (ok) { tagRes(r, needAvg(r) > .97 ? '+FULL SERVICE!' : { feed: 'NOM NOM!', wash: 'SQUEAKY CLEAN!', vet: 'PATCHED UP!', play: 'ZOOMIES!', sig: sigName(r).toUpperCase() + '! ♥' }[kind] || '♥', needAvg(r) > .97 ? '#ffd24a' : '#fff4e0'); GS.stats.care++; bumpStreak(); voice(voiceOf(r), sizeOf(r)); r.bounce = 1; if (grnd() < .45) ellaSay(tx(pick(ELLA_CARE[kind === 'sig' ? 'special' : kind] || ELLA_CARE.feed))); }
   return ok;
 }
 function scoop(r, i) { const p = r.poops.splice(i, 1)[0]; if (!p) return; GS.stats.poops++; sfx('squish', p[2]); if (grnd() < .18) setTimeout(() => sfx('fart', .35 + p[2] * .1), 150); spawn('poof', stallCenter(r.st, p), 8); r.clean = clamp(r.clean + .08, 0, 1); bumpStreak(); }
@@ -256,7 +256,7 @@ function approve() {
   if (r.sp === 'mash') GS.stats.adoptMash++; else if (info && info.cls === 'exotic' || info && info.cls === 'legend') GS.stats.adoptExotic++;
   if (a.celeb) GS.stats.adoptCeleb++;
   GS.rep = clamp(GS.rep + 1 + mi.hearts * .5, 0, 100);
-  GS.tails.unshift({ n: r.name, a: a.name, d: GS.day, $: don, k: r.sp === 'mash' ? 'm:' + r.mash.parents.join('+') : r.sp, stray: r.stray || 0 }); GS.tails = GS.tails.slice(0, 60);
+  GS.tails.unshift({ n: r.name, a: a.name, w: a.who || '', d: GS.day, $: don, k: r.sp === 'mash' ? 'm:' + r.mash.parents.join('+') : r.sp, stray: r.stray || 0 }); GS.tails = GS.tails.slice(0, 60);
   removeResident(r); RT.dayAdopt++; earn(don, [L.W / 2, L.H * .5]); setTimeout(() => sfx('chaching', don >= 1e6 ? 1 : 0), 120);
   ellaSay(tx(pick(APPROVE_LINES))); spawn('confetti', [L.W / 2, L.H * .45], 40); if (don >= 1e6) spawn('money', [L.W / 2, 0], 60);
   RT.lastDon = { v: don, t: 0 };

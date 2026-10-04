@@ -20,7 +20,7 @@ function drawAds() {
   paint(() => RR(px, py, pw, ph, 20), '#24242c', '#14141a', { lw: 2, sx: 0, sy: -3 }); const sx = px + 8, sy = py + 20, sw = pw - 16, sh = ph - 30;
   g.save(); g.beginPath(); RR(sx, sy, sw, sh, 10); g.clip(); g.fillStyle = '#fff'; g.fillRect(sx, sy, sw, sh);
   txt('Adopt-a-Gram', sx + 10, sy + 12, `13px ${FONT.lucky}`, '#e0457b', null, 0, 'left'); txt('@ellasark915', sx + sw - 8, sy + 12, `600 10px ${FONT.fre}`, '#888', null, 0, 'right');
-  const fh = Math.min(sh * .55, sw * .8); const gr = g.createLinearGradient(0, sy + 22, 0, sy + 22 + fh); gr.addColorStop(0, '#8fd0e8'); gr.addColorStop(1, '#ffd29a'); g.fillStyle = gr; g.fillRect(sx, sy + 22, sw, fh); g.fillStyle = '#e8b682'; g.fillRect(sx, sy + 22 + fh * .8, sw, fh * .2);
+  const fh = Math.min(sh * .55, sw * .8); miniScene(sx, sy + 22, sw, fh, 'day', 0, { flora: true, hz: .6 });
   drawSpr(getSprite(kitOf(r)), sx + sw / 2, sy + 22 + fh - 6, sw * .8, fh * .82, { blink: (RT.t % 3) < .1 });
   const posted = RT.adPost && RT.adPost.r === r.id && RT.adPost.t < 3.5;
   if (posted) { RT.adPost.t += DT; const lk = Math.round(RT.adPost.likes * clamp(RT.adPost.t / 1.5, 0, 1)); g.fillStyle = 'rgba(224,69,123,.85)'; g.beginPath(); RR(sx + sw / 2 - 70, sy + 22 + fh / 2 - 20, 140, 40, 20); g.fill(); icon('heart', sx + sw / 2 - 46, sy + 22 + fh / 2, 9, { col: '#fff' }); txt(lk.toLocaleString('en-US'), sx + sw / 2 + 12, sy + 22 + fh / 2 + 1, `20px ${FONT.lucky}`, '#fff', null); }
@@ -85,7 +85,7 @@ function drawOpenHouse() {
   // animal picker
   const px = land ? x + aw + 8 : x, py = land ? y : ay + ah + 8, pw = land ? w - aw - 8 : w, ph = land ? h - 58 : y + h - py - 58;
   panel(px, py, pw, ph, '#f2d9b0', { lw: 1.6 });
-  const s = getSprite(kitOf(r)); const sh = ph - 66; shadow(px + pw / 2, py + 8 + sh, pw * .25, 5, .2); drawSpr(s, px + pw / 2, py + 8 + sh, pw * .62, sh - 6, { blink: (RT.t % 3.3) < .12, sqy: 1 + Math.sin(RT.t * 2.2) * .02 });
+  const sh = ph - 66; miniScene(px + 6, py + 6, pw - 12, sh - 2, a.celeb ? 'sunset' : 'day', 9, { flora: true, hz: .62 }); const s = getSprite(kitOf(r)); shadow(px + pw / 2, py + 8 + sh, pw * .25, 5, .2); drawSpr(s, px + pw / 2, py + 8 + sh, pw * .62, sh - 6, { blink: (RT.t % 3.3) < .12, sqy: 1 + Math.sin(RT.t * 2.2) * .02 });
   ftxt(r.name, px + pw / 2, py + ph - 48, pw - 90, 16, FONT.lucky, '#5a2a14', null);
   ftxt(spName(r), px + pw / 2, py + ph - 32, pw - 20, 10.5, FONT.lil, '#6a4a2a', null);
   const hearts = a.wants.length; for (let i = 0; i < hearts; i++) icon('heart', px + pw / 2 + (i - (hearts - 1) / 2) * 20, py + ph - 14, 7.5, { col: i < mi.hearts ? '#ff4a6a' : '#c8b09a' });
@@ -182,12 +182,13 @@ function drawDex() {
   const area = [x, y + 40, w, h - 40];
   if (RT.dexT === 'animals') { const ids = Object.keys(SP), cols = L.portrait ? 4 : 7, cw = w / cols, ch = 86, got = ids.filter(k => GS.dex[k]).length; ftxt(`${got} / ${ids.length} species met`, x + w / 2, y + 48, w, 12, FONT.lil, '#ffe9a8', null);
     scrollArea('dexA', [x, y + 58, w, h - 58], Math.ceil(ids.length / cols) * ch, y0 => ids.forEach((k, i) => { const bx = x + (i % cols) * cw, by = y0 + Math.floor(i / cols) * ch, seen = GS.dex[k] || k === 'sarge'; panel(bx + 2, by + 2, cw - 4, ch - 4, seen ? '#fff4e0' : '#5a4a3a', { lw: 1, sy: -2 }); const s = getSprite(SP[k].kit); if (seen) drawSpr(s, bx + cw / 2, by + ch - 20, cw - 12, ch - 28); else drawSil(s, bx + cw / 2, by + ch - 20, cw - 12, ch - 28); ftxt(seen ? SP[k].name : '???', bx + cw / 2, by + ch - 11, cw - 8, 10, FONT.lil, seen ? '#5a2a14' : '#c8b8a8', null); if (seen) hit('dexa_' + k, bx, by, cw, ch, () => toast(`${SP[k].name} (${SP[k].sp}): ${tx(BIO[k] || '')}`, '#ffe9a8', 3.2)); })); }
-  if (RT.dexT === 'mash') { const ms = Object.entries(GS.dex).filter(([k]) => k.startsWith('m:')), legs = ms.filter(([, v]) => v.l >= 0).length, cols = L.portrait ? 3 : 6, cw = w / cols, ch = 104;
+  if (RT.dexT === 'mash') { const ms = Object.entries(GS.dex).filter(([k]) => k.startsWith('m:')), legs = ms.filter(([, v]) => v.l >= 0).length, cols = L.portrait ? 3 : 6, cw = w / cols, ch = 128;
     ftxt(`${ms.length} mashups discovered · ${legs} / ${LEGENDS_MASH.length} Legendary`, x + w / 2, y + 48, w, 12, FONT.lil, '#ffe9a8', null);
     if (!ms.length) boxTxt(GS.act >= 3 ? 'Romance Hour at the Puddle makes mashups. Check the Sunset Report.' : 'Something about the flood water... Keep playing. Act 3 gets weird.', x + 20, y + 80, w - 40, 80, 15, FONT.fre, '#ffe9a8', 'center', '600 ');
-    scrollArea('dexM', [x, y + 58, w, h - 58], Math.ceil(ms.length / cols) * ch, y0 => ms.forEach(([k, v], i) => { const bx = x + (i % cols) * cw, by = y0 + Math.floor(i / cols) * ch; panel(bx + 2, by + 2, cw - 4, ch - 4, v.l >= 0 ? '#fff0b8' : '#e0faf6', { lw: 1, sy: -2 }); const o = orient(v.p[0], v.p[1]); const kit = kitOf({ mash: { legend: v.l, face: o.face, body: o.body, parents: v.p } }); drawSpr(getSprite(kit), bx + cw / 2, by + ch - 28, cw - 12, ch - 36); ftxt(v.n, bx + cw / 2, by + ch - 18, cw - 8, 11, FONT.lil, '#3a2416', null); ftxt(SP[v.p[0]].name + ' × ' + SP[v.p[1]].name, bx + cw / 2, by + ch - 7, cw - 8, 8.5, FONT.fre, '#6a4a2a', null, 0, 'center', '600 '); })); }
+    scrollArea('dexM', [x, y + 58, w, h - 58], Math.ceil(ms.length / cols) * ch, y0 => ms.forEach((e, i) => { const bx = x + (i % cols) * cw, by = y0 + Math.floor(i / cols) * ch; mashTile(mashData(e), bx + 3, by + 3, cw - 6, ch - 6); hit('dexm_' + i, bx, by, cw, ch, () => { sfx('page'); RT.dexCard = e[0]; }); })); }
   if (RT.dexT === 'tails') { const T2 = GS.tails; if (!T2.length) boxTxt('Every adoption sends a Happy Tails postcard here.', x + 20, y + 70, w - 40, 60, 15, FONT.fre, '#ffe9a8', 'center', '600 ');
     scrollArea('dexT', [x, y + 44, w, h - 44], T2.length * 50, y0 => T2.forEach((t2, i) => { const by = y0 + i * 50; panel(x + 4, by + 2, w - 8, 44, '#fff4e0', { lw: 1, sy: -2 }); ftxt(`${t2.n} → ${t2.a}`, x + 14, by + 16, w - 140, 14, FONT.lil, '#5a2a14', null, 0, 'left'); ftxt(`Day ${t2.d} · ${pick2(POSTCARDS, i)}`, x + 14, by + 33, w - 140, 11, FONT.fre, '#6a4a2a', null, 0, 'left', '600 '); ftxt(fmtFull$(t2.$), x + w - 14, by + 24, 120, 14, FONT.lil, '#2a6a2a', null, 0, 'right'); })); }
+  if (RT.dexCard) drawCardModal();
 }
 const POSTCARDS = ['"Sleeps on my head. 10/10."', '"Ate the couch. Worth it."', '"STILL ON EARTH."', '"Best decision of my life."', '"Grandma is in love."', '"He has his own Adopt-a-Gram now."', '"We moved to a bigger house. For him."'];
 const pick2 = (a, i) => a[i % a.length];

@@ -62,6 +62,15 @@ function heli(x, y, s) { g.save(); g.translate(x, y); paint(() => { E(0, 0, s, s
 /* ---------- habitat backdrops for stalls ---------- */
 const HAB_NAME = { kennel: 'Kennel', desert: 'Desert Run', swamp: 'Swamp Pool', reptile: 'Reptile Sauna', bigcat: 'Big Cat Deck', sky: 'Aviary', jungle: 'Jungle Deck', ice: 'Ice Room', salt: 'Salt Tank', mud: 'Mud Wallow', pachy: 'Pachyderm Hold', jurassic: 'Jurassic Paddock' };
 const KENNEL_WALL = ['#f2d9b0', '#e6eef0', '#f6e4ee', '#e8f0dc', '#f4e6c8', '#e4e8f6'];
+// arched stall window with a little view of the Franklin Mountains and the Star on the Mountain
+function stallWindow(cx, y, w, h, tod = 'day') {
+  const x = cx - w / 2, path = () => { g.moveTo(x, y + h); g.lineTo(x, y + w * .32); g.quadraticCurveTo(x, y, cx, y); g.quadraticCurveTo(x + w, y, x + w, y + w * .32); g.lineTo(x + w, y + h); g.closePath(); };
+  paint(() => { const p = 3.5; g.moveTo(x - p, y + h + p); g.lineTo(x - p, y + w * .32); g.quadraticCurveTo(x - p, y - p, cx, y - p); g.quadraticCurveTo(x + w + p, y - p, x + w + p, y + w * .32); g.lineTo(x + w + p, y + h + p); g.closePath(); }, '#9a6438', '#6e4220', { lw: 1.4, sy: -1.5 });
+  g.save(); g.beginPath(); path(); g.clip(); g.drawImage(sceneImg(tod === 'night' ? 'night' : tod === 'sunset' ? 'sunset' : 'day', w * 2.2, h * 1.6, { hz: .62 }), x - w * .6, y - h * .2, w * 2.2, h * 1.6); g.restore();
+  g.save(); g.strokeStyle = '#7a4a24'; g.lineWidth = 2.2; g.beginPath(); g.moveTo(cx, y + 1); g.lineTo(cx, y + h); g.moveTo(x, y + h * .58); g.lineTo(x + w, y + h * .58); g.stroke(); g.fillStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.moveTo(x + w * .14, y + h * .5); g.lineTo(x + w * .3, y + h * .18); g.lineTo(x + w * .38, y + h * .18); g.lineTo(x + w * .22, y + h * .5); g.fill(); g.restore();
+  g.strokeStyle = INK; g.lineWidth = 1.6; g.beginPath(); path(); g.stroke();
+  paint(() => RR(x - 6, y + h + 1, w + 12, 6, 2), '#b07a45', '#7a4a24', { lw: 1.2, sy: -1 });
+}
 function habitatBg(hab, x, y, w, h, i) {
   g.save(); g.beginPath(); RR(x, y, w, h, 8); g.clip();
   const fl = y + h * .78; let wall = '#f2d9b0', floor = '#c89058';
@@ -69,7 +78,8 @@ function habitatBg(hab, x, y, w, h, i) {
   seed = 50 + i * 7;
   switch (hab) {
     case 'kennel': grad(KENNEL_WALL[i % 6], dk(KENNEL_WALL[i % 6], .06)); { // window to the desert
-        const wx = x + w * .5 - 22, wy = y + 10; g.save(); g.beginPath(); RR(wx, wy, 44, 28, 12); g.clip(); const gr = g.createLinearGradient(0, wy, 0, wy + 28); gr.addColorStop(0, '#8fd0e8'); gr.addColorStop(1, '#ffd29a'); g.fillStyle = gr; g.fillRect(wx, wy, 44, 28); g.fillStyle = '#9a7aa8'; g.beginPath(); g.moveTo(wx, wy + 24); g.lineTo(wx + 12, wy + 14); g.lineTo(wx + 22, wy + 19); g.lineTo(wx + 32, wy + 11); g.lineTo(wx + 44, wy + 20); g.lineTo(wx + 44, wy + 28); g.lineTo(wx, wy + 28); g.fill(); g.restore(); g.strokeStyle = INK; g.lineWidth = 1.6; g.beginPath(); RR(wx, wy, 44, 28, 12); g.stroke(); }
+        stallWindow(x + w / 2, y + 24, Math.min(w * .42, 74), Math.min(h * .26, 44), todNow());
+        { const wy0 = y + h * .52; g.fillStyle = 'rgba(120,70,30,.10)'; g.fillRect(x, wy0, w, fl - wy0); g.strokeStyle = 'rgba(90,50,20,.18)'; g.lineWidth = 1; for (let xx = x + 9; xx < x + w; xx += 13) { g.beginPath(); g.moveTo(xx, wy0); g.lineTo(xx, fl); g.stroke(); } g.fillStyle = 'rgba(120,70,30,.35)'; g.fillRect(x, wy0 - 3, w, 4); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x, wy0 - 3, w, 1.2); } }
       g.fillStyle = '#c89058'; g.fillRect(x, fl, w, h); g.strokeStyle = 'rgba(60,30,10,.3)'; for (let xx = x; xx < x + w; xx += 18) { g.beginPath(); g.moveTo(xx, fl); g.lineTo(xx - 6, y + h); g.stroke(); }
       paint(() => E(x + w * .5, fl + h * .1, w * .32, h * .06), ['#e9503f', '#3f86b8', '#e0457b', '#5f9654'][i % 4], null, { lw: 1.2 }); break;
     case 'desert': grad('#ffe0b0', '#f0c890'); g.fillStyle = '#e8b682'; g.fillRect(x, fl - 4, w, h); pricklyPear(x + w * .12, fl + 2, .35); paint(() => E(x + w * .86, fl, 14, 8), '#b88a6a', '#987050', { lw: 1.2 }); break;

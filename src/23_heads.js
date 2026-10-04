@@ -99,7 +99,7 @@ const HEADS = {
     draw(p) {
       const c = p.col, d = dk(c, .25);
       paint(() => S([[-16, -8], [-4, -12], [20, -9], [48, -8], [58, -3], [56, 4], [20, 8], [-12, 8]], .9), c, d, { sx: -2, sy: -3, tex: () => { scales(-18, -14, 76, 24, dk(c, .4), 6, .5); g.fillStyle = lt(c, .4); g.fillRect(-18, 4, 80, 8); } });
-      for (const ex of [2]) { paint(() => E(ex, -12, 7, 6), c, d, { lw: 1.6 }); eye(ex, -13, 4.6, p.eye || '#d8b82e', { ir: .45, slit: true, lid: .3, lidCol: c, puddle: p.puddle }); }
+      for (const ex of [2]) { paint(() => E(ex, -13, 8.5, 7.5), c, d, { lw: 1.6 }); eye(ex, -14, 5.8, p.eye || '#d8b82e', { ir: .45, slit: true, lid: .3, lidCol: c, puddle: p.puddle }); }
       g.fillStyle = '#fff'; g.strokeStyle = INK; g.lineWidth = .8; for (let i = 10; i < 54; i += 6) { g.beginPath(); g.moveTo(i, 3); g.lineTo(i + 2, 7.5); g.lineTo(i + 4, 3); g.fill(); g.stroke(); }
       line([[-6, 4], [56, 2]], INK, 1.4); g.fillStyle = '#2a2a1a'; g.beginPath(); C(54, -5, 1.4); g.fill();
       if (p.lashes) { line([[-2, -18], [-4, -22]], INK, 1.2); line([[3, -19], [3, -23]], INK, 1.2); line([[7, -18], [9, -22]], INK, 1.2); }

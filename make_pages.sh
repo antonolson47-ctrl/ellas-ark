@@ -27,7 +27,18 @@ MAN
 touch $OUT/.nojekyll
 rm -rf $OUT/src $OUT/test $OUT/screenshots $OUT/plan $OUT/mockup $OUT/build_assets; mkdir -p $OUT/src $OUT/test $OUT/screenshots $OUT/plan $OUT/mockup $OUT/build_assets
 cp src/* $OUT/src/; cp build.sh make_pages.sh $OUT/; cp test/*.js test/package.json $OUT/test/; [ -f test/package-lock.json ] && cp test/package-lock.json $OUT/test/
-cp screenshots/*.png $OUT/screenshots/; cp plan/*.md plan/*.png $OUT/plan/ 2>/dev/null || true; cp mockup/* $OUT/mockup/ 2>/dev/null || true; cp build_assets/* $OUT/build_assets/
+python3 - "$OUT/screenshots" <<'PYS'
+# published screenshots are downscaled (max 1000px) + palette-quantized to keep the site light; source PNGs stay full-res
+import sys, os, glob
+from PIL import Image
+out = sys.argv[1]
+for f in sorted(glob.glob('screenshots/*.png') + glob.glob('screenshots/polish/*.png')):
+    d = os.path.join(out, os.path.relpath(f, 'screenshots')); os.makedirs(os.path.dirname(d), exist_ok=True)
+    im = Image.open(f).convert('RGB'); s = 1000 / max(im.size)
+    if s < 1: im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
+    im.quantize(256, method=Image.MEDIANCUT, dither=Image.FLOYDSTEINBERG).save(d, optimize=True)
+PYS
+ cp plan/*.md plan/*.png $OUT/plan/ 2>/dev/null || true; cp mockup/* $OUT/mockup/ 2>/dev/null || true; cp build_assets/* $OUT/build_assets/
 cp EllasArk.html $OUT/EllasArk.html; cp README.md PROGRESS.md $OUT/
 printf 'node_modules/\ntest/tmp/\n' > $OUT/.gitignore
 echo "pages assembled in $OUT"
